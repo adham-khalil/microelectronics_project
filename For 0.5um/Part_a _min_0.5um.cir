@@ -1,0 +1,17 @@
+part_a.end
+
+.include MOSFET_models_0p5_0p18-1.inc
+
+VIN vi gnd 0
+VDD vdd gnd DC 3.3
+* Transistors
+M1 vo vi gnd gnd NMOS0P18 [w=1.25u l=0.5u]
+M2 vo vi vdd vdd PMOS0P18 [w=1.25u l=0.5u]
+
+* Load
+RL vo vc 1k
+CL vc gnd .5p
+
+* DC Sweep Analysis
+.dc VIN 0 3.3 0.01
+.op
