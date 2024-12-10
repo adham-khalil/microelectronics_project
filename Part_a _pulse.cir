@@ -1,0 +1,17 @@
+part_a.end
+.include MOSFET_models_0p5_0p18-1.inc
+
+VIN vi gnd PULSE(0 1.8 0 1p 1p 5n)
+VDD vdd gnd DC 1.8
+* Transistors
+M1 vo vi gnd gnd NMOS0P18 [w=0.9u l=0.18u]
+M2 vo vi vdd vdd PMOS0P18 [w=0.9u l=0.18u]
+
+* Load
+RL vo vc 1k
+CL vc gnd .2p
+
+.tran 0.2n 10n
+.measure tran tphl trig v(vi) val = 0.9V VTO=1V rise=1 targ v(vo) VAL = 0.18V
+.measure tran tplh trig v(vi) val = 0.9V VTO=0.8V fall=1 targ v(vo) VAL = 1.62V
+.op
