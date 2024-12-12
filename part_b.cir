@@ -1,0 +1,70 @@
+partb
+.include MOSFET_models_0p5_0p18-1.inc
+
+*sources
+Vs1 S1 gnd PULSE(0 1.8 0 .4n .4n 20n 40n)
+Vs0 S0 gnd PULSE(0 1.8 0 .4n .4n 10n 20n)
+Vin0 in0 gnd PULSE(0 1.8 0 .4n .4n 40n)
+Vin1 in1 gnd PULSE(0 1.8 40n .4n .4n 40n)
+Vin2 in2 gnd PULSE(0 1.8 80n .4n .4n 40n)
+Vin3 in3 gnd PULSE(0 1.8 120n .4n .4n 40n)
+VDD vdd gnd DC 1.8
+
+*cmos inverter
+.subckt inv Vin Vout Vd
+M1 Vout Vin gnd gnd NMOS0P18 [w=0.9u l=0.18u]
+M2 Vout Vin Vd Vd PMOS0P18 [w=1.8u l=0.18u]
+.end inv
+
+*nmos lines
+.subckt n_line Vdn sel0 sel1 in
+M3 Vdn sel0 vs1 vs1 NMOS0P18 [w=0.9u l=0.18u]
+M4 vs1 sel1 vs2 vs2 NMOS0P18 [w=0.9u l=0.18u]
+M5 vs2 in gnd gnd NMOS0P18 [w=0.9u l=0.18u]
+.end n_line
+
+*pmos lines
+.subckt p_line Vs sel0 sel1 in Vd
+M6 Vd sel0 Vs Vs PMOS0P18 [w=1.8u l=0.18u]
+M7 Vd sel1 Vs Vs PMOS0P18 [w=1.8u l=0.18u]
+M8 Vd in Vs Vs PMOS0P18 [w=1.8u l=0.18u]
+.end p_line
+
+
+*4x1 mux layout
+.subckt mux4x1 Vdd sel_0 sel_1 In0 In1 In2 In3 Vout
+
+xinv0 sel_0 sel_0_bar Vdd inv
+xinv1 sel_1 sel_1_bar Vdd inv
+
+*pull up network
+xin0_pline Vdd sel_0_bar sel_1_bar In0 vd1 P_line
+xin1_pline vd1 sel_0 sel_1_bar In1 vd2 P_line
+xin2_pline vd2 sel_0_bar sel_1 In2 vd3 P_line
+xin3_pline Vd3 sel_0 sel_1 In3 Vo P_line
+
+
+*pull down network
+xin0_nline Vo sel_0_bar sel_1_bar In0 n_line
+xin1_nline Vo sel_0 sel_1_bar In1 n_line
+xin2_nline Vo sel_0_bar sel_1 In2 n_line
+xin3_nline Vo sel_0 sel_1 In3 n_line
+
+xout Vo Vout Vdd inv
+
+.end mux4x1
+
+
+xMux_4x1 vdd s0 s1 in0 in1 in2 in3 VL mux4x1
+
+*load
+RL VL vc 1k
+CL vc gnd .2p
+
+*simulation
+.tran 1n 160n
+.measure tran tplh trig v(VL) val=0.18V rise=1 v(s0) val=0.5v fall=1 targ v(VL) VAL = 1.62V rise=1
+.measure tran tphl trig v(VL) val=1.62V fall=1 v(s0) val=0.5v rise=1 targ v(VL) VAL = 0.18V fall=1
+.measure tran Pd integ V(vdd)
+
+.end
